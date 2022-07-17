@@ -7,7 +7,7 @@ import (
 )
 
 func Test_CreateTencentSMSClient(t *testing.T) {
-	result, err := CreateTencentSMSClient()
+	result, err := NewTencentSMS()
 	assert.Nil(t, err)
 	fmt.Println("return result is ", result)
 

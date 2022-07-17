@@ -26,6 +26,8 @@ func main() {
 
 	authRouterGroup := r.Group("/demo")
 	{
+		authRouterGroup.POST("guest_register", register.RegisterGuest)
+		authRouterGroup.POST("guest_register", register.QuickRegister)
 		authRouterGroup.POST("/code", register.SendVerificationCode)
 		authRouterGroup.POST("/verify", register.Verify)
 		authRouterGroup.POST("/password", register.SetPassword)
