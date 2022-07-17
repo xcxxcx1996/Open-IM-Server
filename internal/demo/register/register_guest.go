@@ -20,17 +20,14 @@ const DefaultPassword = "guest123"
 const DefaultAreaCode = "86"
 
 type ParamRegisterGuest struct {
-	Email            string `json:"email"`
-	Nickname         string `json:"nickname"`
-	CartId           string `json:"cartId"`
-	PhoneNumber      string `json:"phoneNumber"`
-	VerificationCode string `json:"verificationCode"`
-	Platform         int32  `json:"platform" binding:"required,min=1,max=7"`
-	Ex               string `json:"ex"`
-	FaceURL          string `json:"faceURL"`
-	OperationID      string `json:"operationID" binding:"required"`
+	Nickname    string `json:"nickname"`
+	CartId      string `json:"cartId"`
+	Platform    int32  `json:"platform" binding:"required,min=1,max=7"`
+	Ex          string `json:"ex"`
+	FaceURL     string `json:"faceURL"`
+	OperationID string `json:"operationID" binding:"required"`
 	// AreaCode         string `json:"areaCode"`
-	// Password         string `json:"password" binding:"required"`
+	Password string `json:"password"`
 }
 
 func RegisterGuest(c *gin.Context) {
@@ -44,34 +41,18 @@ func RegisterGuest(c *gin.Context) {
 	if params.CartId != "" {
 		account = params.CartId
 	}
-	// if params.Email != "" {
-	// 	account = params.Email
-	// } else {
-	// 	account = params.PhoneNumber
-	// }
 	if params.Nickname == "" {
-		params.Nickname = account
+		params.Nickname = "访客" + account
 	}
-
-	// key 认证
-
-	// if params.VerificationCode != config.Config.Demo.SuperCode {
-	// 	accountKey := params.AreaCode + account + "_" + constant.VerificationCodeForRegisterSuffix
-	// 	v, err := db.DB.GetAccountCode(accountKey)
-	// 	if err != nil || v != params.VerificationCode {
-	// 		log.NewError(params.OperationID, "password Verification code error", account, params.VerificationCode)
-	// 		data := make(map[string]interface{})
-	// 		data["PhoneNumber"] = account
-	// 		c.JSON(http.StatusOK, gin.H{"errCode": constant.CodeInvalidOrExpired, "errMsg": "Verification code error!", "data": data})
-	// 		return
-	// 	}
-	// }
-	//userID := utils.Base64Encode(account)
 
 	userID := utils.Md5(params.OperationID + strconv.FormatInt(time.Now().UnixNano(), 10))
 	bi := big.NewInt(0)
 	bi.SetString(userID[0:8], 16)
 	userID = bi.String()
+
+	if params.Password == "" {
+		params.Password = utils.Md5(DefaultPassword)
+	}
 
 	url := config.Config.Demo.ImAPIURL + "/auth/user_register"
 	openIMRegisterReq := api.UserRegisterReq{}
@@ -100,16 +81,16 @@ func RegisterGuest(c *gin.Context) {
 		return
 	}
 
-	log.Info(params.OperationID, "begin store mysql", account, DefaultPassword, "info", params.FaceURL, params.Nickname)
+	log.Info(params.OperationID, "begin store mysql", account, params.Password, "info", params.FaceURL, params.Nickname)
 
-	err = im_mysql_model.SetPassword(account, DefaultPassword, params.Ex, userID, DefaultAreaCode)
+	err = im_mysql_model.SetPassword(account, params.Password, params.Ex, userID, DefaultAreaCode)
 
 	if err != nil {
 		log.NewError(params.OperationID, "set phone number password error", account, "err", err.Error())
 		c.JSON(http.StatusOK, gin.H{"errCode": constant.RegisterFailed, "errMsg": err.Error()})
 		return
 	}
-	log.Info(params.OperationID, "end setPassword", account, DefaultPassword)
+	log.Info(params.OperationID, "end setPassword", account, params.Password)
 
 	// demo onboarding
 	// onboardingProcess(params.OperationID, userID, params.Nickname, params.FaceURL, DefaultAreaCode +params.PhoneNumber, params.Email)

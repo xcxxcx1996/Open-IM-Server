@@ -50,25 +50,10 @@ func QuickRegister(c *gin.Context) {
 	if params.Nickname == "" {
 		params.Nickname = account
 	}
-	//fixme 这个password 是md5后还是其他呢
+
 	if params.Password == "" {
 		params.Password = utils.Md5(account + DefaultPassword)
 	}
-	// password:=""
-	// key 认证
-
-	// if params.VerificationCode != config.Config.Demo.SuperCode {
-	// 	accountKey := params.AreaCode + account + "_" + constant.VerificationCodeForRegisterSuffix
-	// 	v, err := db.DB.GetAccountCode(accountKey)
-	// 	if err != nil || v != params.VerificationCode {
-	// 		log.NewError(params.OperationID, "password Verification code error", account, params.VerificationCode)
-	// 		data := make(map[string]interface{})
-	// 		data["PhoneNumber"] = account
-	// 		c.JSON(http.StatusOK, gin.H{"errCode": constant.CodeInvalidOrExpired, "errMsg": "Verification code error!", "data": data})
-	// 		return
-	// 	}
-	// }
-	//userID := utils.Base64Encode(account)
 
 	userID := utils.Md5(params.OperationID + strconv.FormatInt(time.Now().UnixNano(), 10))
 	bi := big.NewInt(0)
